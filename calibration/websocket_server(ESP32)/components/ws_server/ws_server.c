@@ -131,17 +131,21 @@ static esp_err_t controller_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "Packet type: %d", ws_pkt.type);
 
     if (ws_pkt.type == HTTPD_WS_TYPE_TEXT &&
-        strcmp((char*)ws_pkt.payload,"findAps") == 0) {
+        (strcmp((char*)ws_pkt.payload,"findAps") == 0 || 
+        strcmp((char*)ws_pkt.payload,"findApsFast") == 0) )  {
 
         char *scan_results_buf = NULL;
         uint16_t max_scans = 20;
         uint16_t verbose = 0; 
         uint16_t nbuf = 0; 
 
-        ESP_LOGI(TAG, "Find APs Request Acknowleged. Initiating Scan...");   
-        //wifi_scan(&scan_results_buf, &nbuf, verbose); 
-        wifi_scan2(&scan_results_buf, &nbuf, verbose, max_scans);
-
+        ESP_LOGI(TAG, "Find APs Request Acknowleged. Initiating Scan...");  
+        if (strcmp((char*)ws_pkt.payload,"findApsFast") == 0) {
+            wifi_scan(&scan_results_buf, &nbuf, verbose);
+        } else{
+            wifi_scan2(&scan_results_buf, &nbuf, verbose, max_scans);
+        }
+         
        //send back scan data to websocket client
         ws_pkt.type = HTTPD_WS_TYPE_TEXT;
         ws_pkt.payload = (uint16_t *)scan_results_buf;
