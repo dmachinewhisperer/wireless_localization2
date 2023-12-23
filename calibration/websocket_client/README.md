@@ -1,5 +1,5 @@
 # Websocket server
-The example starts a websocket server on a local network. You need a websocket client to interact with the server. The `websocket_client` in the root directory can be used for this interaction. 
+Command-line based Websocket client for interacting with the websocket server
 
 ## How to Use
 
@@ -26,40 +26,87 @@ When the client is connected to the server, a text input field is presented to t
 
 * To scan for WAPs, the websocket client must send "findAps" to the server. Upon reciept of the of this string, It starts scanning for WAPs. The scan takes about 1 - 2 mins to complete. The data is sent back to the client. 
 
+* Alternatively, client may send "findApsFast". The server performs a single scan and returns the sensed WAPs. Takes about 2 - 5 secs to get the scan results
+
 ### Format of the Scan Output Sent to the client
 | BSSID | SSID | ENCRYPTION| CHANNEL | RSSI | NO OF OCCURENCES |
 
 * To write the data into database, the user must enter "save location" in the text prompt. Location is the tag of the fingerprint Upon reciept of this, the fingerprint of the location is constructed and saved
-## Example Usage
+
+
+## Tools
+`utils` is a collection of tools for manipulating the database
+database: 
+* devdb.db
+tables: 
+* fv_ordering: stores the ordering of the feature vectors
+* fingerprints: stores the constructed fingerprints
+
+`db_clean.py`: cleans the database
+
+#### Usage
+db_clean.py database_name
+eg: db_clean.py devdb.db
+
+db_read.py: reads table rows and prints them on the commandline
+
+#### Usage
+cmd: py db_read.py db_name tb_name n_rows
+eg:  py db_read.py devdb.db fingerprints 10
+
+## Example Usage Output
 
 ```
+PS C:\Users\websocket_client> py .\ws_client.py
+Enter WSS addr: 172.22.195.59
 Opened connection
-Enter message to send (or type 'exit' to close the connection): findAps
-Enter message to send (or type 'exit' to close the connection): Received message: 88B1E1974121, -63, 17
-88B0E1974120, -63, 17
-88B0E19726C0, -72, 17
-88B0E19726C1, -72, 18
-6C8D075D98A3, -76, 20
-6C8D775098A4, -75, 20
-88B1E199C301, -76, 12
-6C8D775098A2, -75, 20
-88B1E1982201, -78, 18
-88B1E10D2200, -79, 17
-88B1E1866621, -82, 15
-88B1E1066620, -82, 14
-88B1E18D12E1, -83, 18
-F01D2D374563, -83, 20
-F01D2D774562, -83, 20
-88B1E12D28E1, -83, 19
-88B1E10D12E0, -84, 13
-88B1E10D28E0, -83, 15
-88B1E1904580, -84, 13
-88B1E1904581, -84, 13
-88B1E04B78C1, -87, 6
-F01D2D077AE3, -91, 2
-88B1E999C300, -76, 11
-88B1E04B78C0, -88, 4
-F01D28E780E2, -88, 3
-F01D2EE780E3, -88, 1
-F01D2D077AE2, -91, 1
+Enter message to send (or type 'exit' quit): findApsFast
+Enter message to send (or type 'exit' quit): Received message: 88B1E1974120, -63, 1
+88B1E1974121, -63, 1
+88B1E19726C0, -72, 1
+6C8D775D98A2, -76, 1
+6C8D775D98A3, -76, 1
+88B1E19726C1, -77, 1
+6C8D775D98A4, -77, 1
+88B1E1973441, -84, 1
+88B1E1973440, -84, 1
+88B1E14B78C0, -86, 1
+F01D2DE77AE2, -87, 1
+F01D2DE77AE3, -88, 1
+88B1E14B78C1, -88, 1
+88B1E14B6E81, -88, 1
+88B1E14B6E80, -88, 1
+F01D2DE780E2, -93, 1
+88B1E19713A1, -94, 1
+88B1E19713A0, -94, 1
+F01D2DE780E3, -97, 1
+
+Enter Location tAG:
+Enter Location tAG: Location 1
+
+Database Updated.
+Enter message to send (or type 'exit' quit): findAps
+Enter message to send (or type 'exit' quit): Received message: 88B1E1974120, -61, 20
+88B1E1974121, -61, 20
+88B1E19726C0, -73, 20
+88B1E19726C1, -73, 20
+6C8D775D98A2, -76, 20
+6C8D775D98A3, -75, 20
+6C8D775D98A4, -76, 20
+F01D2DE77AE3, -85, 20
+88B1E1973441, -87, 17
+88B1E1973440, -87, 15
+F01D2DE77AE2, -85, 20
+88B1E14B78C0, -89, 14
+88B1E14B78C1, -89, 12
+88B1E14B6E80, -89, 12
+88B1E14B6E81, -90, 14
+F01D2DE74563, -90, 9
+F01D2DE74562, -90, 11
+F01D2DE780E2, -93, 2
+000000000000, 0, 46
+
+Enter Location tAG: Location 2
+
+Database Updated.
 ```
