@@ -7,10 +7,10 @@ detected_aps = None
 #convert websocket servers plain text response to df
 def process_wss_res(response):
     global detected_aps
-
+    data = []
     scan_results = response.split('\n')
     for result in scan_results:
-        components = line.strip().split(', ')
+        components = result.strip().split(', ')
         bssid = components[0]
         rssi = int(components[1])
         noccur = int(components[2])
@@ -89,8 +89,9 @@ def construct_fingerprint(connection, return_fp = False):
     if detected_aps is None:
         print("detected_aps is not populated")
         return    
-    
-    location = input("Enter Location tAG: ")
+    location = ''
+    while location =='':
+        location = input("Enter Location tAG: ")
     df = detected_aps[['bssid', 'dBm_signal']]
     fingerprint_elements = df.set_index('bssid')['dBm_signal'].to_dict()
 
