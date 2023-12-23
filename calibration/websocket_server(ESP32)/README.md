@@ -1,90 +1,19 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C6 | ESP32-H2 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | -------- | -------- |
+# Websocket server
+The example starts a websocket server on a local network. You need a websocket client to interact with the server. The `websocket_client` in the root directory can be used for this interaction. 
 
-# Websocket echo server
-
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
-This example demonstrates the HTTPD server using the WebSocket feature.
-
-## How to Use Example
-
-The example starts a websocket server on a local network. You need a websocket client to interact with the server (an example test
-ws_server_example_test.py could be used as the simple websocket client). If you run ws_server_example_test.py and get
-`ModuleNotFoundError: No module named 'websocket'`, then please install `websocket` by running `python -m pip install websocket-client`.
-
-The server registers websocket handler which echoes back the received WebSocket frame. It also demonstrates
-use of asynchronous send, which is triggered on reception of a certain message.
-
-### Websocket support in `http_server`
-
-Websocket echo server is build on top of the HTTP server component using [Websocket server](https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/protocols/esp_http_server.html#websocket-server) configuration.
-This feature is very limited, and a special care must be taken while implementing websocket URI handlers.
-
-#### Configure URI handler
-
-We register the URI handler with the standard API `httpd_register_uri_handler()` with `is_websocket` enabled and other optional parameters:
-
-```c
-static const httpd_uri_t ws_uri_handler_options = {
-        ... // httpd options
-
-        .is_websocket = true,               // Mandatory: set to `true` to handler websocket protocol
-        .handle_ws_control_frames = false,  // Optional: set to `true` for the handler to receive control packets, too
-        .supported_subprotocol = "chat",    // Optional: set supported subprotocol for this handler
-};
-
-```
-
-#### Implement URI handler
-
-The URI handler is called on every URI request, but also before the websocket handshake, so it is very important to check the request type before reading websocket frame:
-
-```c
-    // beginning of the ws URI handler
-    if (req->method == HTTP_GET) {
-        // action before ws handshake
-        return ESP_OK;
-    }
-    // action after the handshake (read frames)
-```
-
-#### Handling incoming data
-
-To receive websocket frames, use `httpd_ws_recv_frame()` after the websocket handshake, with `httpd_ws_frame_t` parameters set accordingly:
-* `payload` to a valid buffer for the received data
-* `len` set to `0` for the first call of `httpd_ws_recv_frame()`. Note that this value is used to indicate the packet length has been read in the previous call if we use dynamic buffers.
-
-`httpd_ws_recv_frame` support two ways to get frame payload.
-* Static buffer -- Allocate maximum expected packet length (either statically or dynamically) and call `httpd_ws_recv_frame()` referencing this buffer and it's size. (Unnecessarily large buffers might cause memory waste)
-
-```
-#define MAX_PAYLOAD_LEN 128
-uint8_t buf[MAX_PAYLOAD_LEN] = { 0 };
-httpd_ws_frame_t ws_pkt;
-ws_pkt.payload = buf;
-httpd_ws_recv_frame(req, &ws_pkt, MAX_PAYLOAD_LEN);
-```
-* Dynamic buffer -- Refer to the examples, which receive websocket data in these three steps:
-  1) Call `httpd_ws_recv_frame()` with zero buffer size
-  2) Allocate the size based on the received packet length
-  3) Call `httpd_ws_recv_frame()` with the allocated buffer
-
-#### Handling outgoing data
-
-Please note that the WebSocket HTTP server does not automatically fragment messages.
-Each outgoing frame has the FIN flag set by default.
-In case an application wants to send fragmented data, it must be done manually by setting the
-`fragmented` option and using the `final` flag as described in [RFC6455, section 5.4](https://tools.ietf.org/html/rfc6455#section-5.4).
-
+## How to Use
 
 ### Hardware Required
 
-This example can be executed on any common development board, the only required interface is WiFi or Ethernet connection to a local network.
+This example can be executed on any ESP32 development board, the only required interface is WiFi connection to a local network. This project was tested on an ESP32-WROOM-32 board. 
+
+### Dependencies
+See the CMakeLists.txt in the component and main directories
 
 ### Configure the project
 
 * Open the project configuration menu (`idf.py menuconfig`)
-* Configure Wi-Fi or Ethernet under "Example Connection Configuration" menu. See "Establishing Wi-Fi or Ethernet Connection" section in [examples/protocols/README.md](../../README.md) for more details.
+* Configure Wi-Fi under "Example Connection Configuration" menu. 
 
 ### Build and Flash
 
@@ -94,94 +23,154 @@ Build the project and flash it to the board, then run monitor tool to view seria
 idf.py -p PORT flash monitor
 ```
 
-(To exit the serial monitor, type ``Ctrl-]``.)
+(To exit the serial monitor, type ``Ctrl-T-X``.)
 
-See the Getting Started Guide for full steps to configure and use ESP-IDF to build projects.
+See the ESP-IDF  Guide for full steps to configure and use ESP-IDF to build projects.
+
+## Scanning For WAPs
+
+* To scan for WAPs, the websocket_client must send "findAps" to the server. Upon reciept of the of this string, It starts scanning for WAPs. 
+* To handle signal fluctuations, the scan is carried out 20 times(can be modfied in the `wifi_scan` using the `max_scan` variable in the scan component).
+* To be included in the final result, a WAP must show up at least 75% of the number of times the scan is carried out.(can be modifed in the `wifi_scan` using the `thresh` variable)
+* The RSSIs is averaged and sent back to the client after the scan completes. 
+
+
+### Format of the Scan Output Sent to the client
+| BSSID | SSID | ENCRYPTION| CHANNEL | RSSI | NO OF OCCURENCES |
+
+
+## Notes
+- If your LAN uses DHCP to assign IP addresses, the IP address of the ESP32 may be different between power cycles. Make sure to copy the current IP address from the serial monitor after startup to the websocket client. Find the following lines in the serial monitor output:
+
+```
+I (6518) esp_netif_handlers: example_netif_sta ip: 172.22.194.205, mask: 255.255.240.0, gw: 172.22.192.1
+I (6518) example_connect: Got IPv4 event: Interface "example_netif_sta" address: 172.22.194.205
+I (6588) example_connect: Got IPv6 event: Interface "example_netif_sta" address: fe80:0000:0000:0000:b2b2:1cff:fea7:4080, type: ESP_IP6_ADDR_IS_LINK_LOCAL
+
+```
+
+- You may need to increase `DEFAULT_SCAN_LIST_SIZE` in scan.c based on the number of WAPs you expect to show up in each location. 
 
 ## Example Output
 ```
-I (4932) example_connect: Got IPv6 event!
-I (4942) example_connect: Connected to Espressif
-I (4942) example_connect: IPv4 address: 192.168.4.2
-I (4952) example_connect: IPv6 address: fe80:xxxx
-I (4962) ws_echo_server: Starting server on port: '80'
-I (4962) ws_echo_server: Registering URI handlers
-D (4962) httpd: httpd_thread: web server started
-D (4972) httpd: httpd_server: doing select maxfd+1 = 56
-D (4982) httpd_uri: httpd_register_uri_handler: [0] installed /ws
-D (17552) httpd: httpd_server: processing listen socket 54
-D (17552) httpd: httpd_accept_conn: newfd = 57
-D (17552) httpd_sess: httpd_sess_new: fd = 57
-D (17562) httpd: httpd_accept_conn: complete
-D (17562) httpd: httpd_server: doing select maxfd+1 = 58
-D (17572) httpd: httpd_server: processing socket 57
-D (17572) httpd_sess: httpd_sess_process: httpd_req_new
-D (17582) httpd_parse: httpd_req_new: New request, has WS? No, sd->ws_handler valid? No, sd->ws_close? No
-D (17592) httpd_txrx: httpd_recv_with_opt: requested length = 128
-D (17592) httpd_txrx: httpd_recv_with_opt: received length = 128
-D (17602) httpd_parse: read_block: received HTTP request block size = 128
-D (17612) httpd_parse: cb_url: message begin
-D (17612) httpd_parse: cb_url: processing url = /ws
-D (17622) httpd_parse: verify_url: received URI = /ws
-D (17622) httpd_parse: cb_header_field: headers begin
-D (17632) httpd_txrx: httpd_unrecv: length = 110
-D (17632) httpd_parse: pause_parsing: paused
-D (17632) httpd_parse: cb_header_field: processing field = Host
-D (17642) httpd_txrx: httpd_recv_with_opt: requested length = 128
-D (17652) httpd_txrx: httpd_recv_with_opt: pending length = 110
-D (17652) httpd_parse: read_block: received HTTP request block size = 110
-D (17662) httpd_parse: continue_parsing: skip pre-parsed data of size = 5
-D (17672) httpd_parse: continue_parsing: un-paused
-D (17682) httpd_parse: cb_header_field: processing field = Upgrade
-D (17682) httpd_parse: cb_header_value: processing value = websocket
-D (17692) httpd_parse: cb_header_field: processing field = Connection
-D (17702) httpd_parse: cb_header_value: processing value = Upgrade
-D (17702) httpd_parse: cb_header_field: processing field = Sec-WebSocket-Key
-D (17712) httpd_parse: cb_header_value: processing value = gfhjgfhjfj
-D (17722) httpd_parse: cb_header_field: processing field = Sec-WebSocket-Proto
-D (17722) httpd_parse: parse_block: parsed block size = 110
-D (17732) httpd_txrx: httpd_recv_with_opt: requested length = 128
-D (17742) httpd_txrx: httpd_recv_with_opt: received length = 40
-D (17742) httpd_parse: read_block: received HTTP request block size = 40
-D (17752) httpd_parse: cb_header_field: processing field = col
-D (17752) httpd_parse: cb_header_value: processing value = echo
-D (17762) httpd_parse: cb_header_field: processing field = Sec-WebSocket-Version
-D (17772) httpd_parse: cb_header_value: processing value = 13
-D (17772) httpd_parse: cb_headers_complete: bytes read     = 169
-D (17782) httpd_parse: cb_headers_complete: content length = 0
-D (17792) httpd_parse: cb_headers_complete: Got an upgrade request
-D (17792) httpd_parse: pause_parsing: paused
-D (17802) httpd_parse: cb_no_body: message complete
-D (17802) httpd_parse: httpd_parse_req: parsing complete
-D (17812) httpd_uri: httpd_uri: request for /ws with type 1
-D (17812) httpd_uri: httpd_find_uri_handler: [0] = /ws
-D (17822) httpd_uri: httpd_uri: Responding WS handshake to sock 57
-D (17822) httpd_ws: httpd_ws_respond_server_handshake: Server key before encoding: gfhjgfhjfj258EAFA5-E914-47DA-95CA-C5AB0DC85B11
-D (17842) httpd_ws: httpd_ws_respond_server_handshake: Generated server key: Jg/fQVRsgwdDzYeG8yNBHRajUxw=
-D (17852) httpd_sess: httpd_sess_process: httpd_req_delete
-D (17852) httpd_sess: httpd_sess_process: success
-D (17862) httpd: httpd_server: doing select maxfd+1 = 58
-D (17892) httpd: httpd_server: processing socket 57
-D (17892) httpd_sess: httpd_sess_process: httpd_req_new
-D (17892) httpd_parse: httpd_req_new: New request, has WS? Yes, sd->ws_handler valid? Yes, sd->ws_close? No
-D (17902) httpd_parse: httpd_req_new: New WS request from existing socket
-D (17902) httpd_txrx: httpd_recv_with_opt: requested length = 1
-D (17912) httpd_txrx: httpd_recv_with_opt: received length = 1
-D (17912) httpd_ws: httpd_ws_get_frame_type: First byte received: 0x81
-D (17922) httpd_txrx: httpd_recv_with_opt: requested length = 1
-D (17932) httpd_txrx: httpd_recv_with_opt: received length = 1
-D (17932) httpd_txrx: httpd_recv_with_opt: requested length = 4
-D (17942) httpd_txrx: httpd_recv_with_opt: received length = 4
-D (17942) httpd_txrx: httpd_recv_with_opt: requested length = 13
-D (17952) httpd_txrx: httpd_recv_with_opt: received length = 13
-I (17962) ws_echo_server: Got packet with message: Trigger async
-I (17962) ws_echo_server: Packet type: 1
-D (17972) httpd_sess: httpd_sess_process: httpd_req_delete
-D (17972) httpd_sess: httpd_sess_process: success
-D (17982) httpd: httpd_server: doing select maxfd+1 = 58
-D (17982) httpd: httpd_server: processing ctrl message
-D (17992) httpd: httpd_process_ctrl_msg: work
-D (18002) httpd: httpd_server: doing select maxfd+1 = 58
-```
+I (788) example_connect: Connecting to GITAM...
+I (788) example_connect: Waiting for IP(s)
+I (3198) wifi:new:<11,0>, old:<1,0>, ap:<255,255>, sta:<11,0>, prof:1
+I (4938) wifi:state: init -> auth (b0)
+I (4948) wifi:state: auth -> assoc (0)
+I (4968) wifi:state: assoc -> run (10)
+I (5008) wifi:connected with GITAM, aid = 3, channel 11, BW20, bssid = 6c:8d:77:5d:98:a3
+I (5008) wifi:security: WPA2-PSK, phy: bgn, rssi: -80
+I (5008) wifi:pm start, type: 1
 
-See the README.md file in the upper level 'examples' directory for more information about examples.
+I (5028) wifi:AP's beacon interval = 102400 us, DTIM period = 1
+I (5528) wifi:<ba-add>idx:0 (ifx:0, 6c:8d:77:5d:98:a3), tid:6, ssn:2, winSize:64
+I (5548) wifi:<ba-del>idx:0, tid:6
+I (5548) wifi:<ba-add>idx:0 (ifx:0, 6c:8d:77:5d:98:a3), tid:6, ssn:3, winSize:64
+I (6518) esp_netif_handlers: example_netif_sta ip: 172.22.194.205, mask: 255.255.240.0, gw: 172.22.192.1
+I (6518) example_connect: Got IPv4 event: Interface "example_netif_sta" address: 172.22.194.205
+I (6588) example_connect: Got IPv6 event: Interface "example_netif_sta" address: fe80:0000:0000:0000:b2b2:1cff:fea7:4080, type: ESP_IP6_ADDR_IS_LINK_LOCAL
+I (6588) example_common: Connected to example_netif_sta
+I (6598) example_common: - IPv4 address: 172.22.194.205,
+I (6598) example_common: - IPv6 address: fe80:0000:0000:0000:b2b2:1cff:fea7:4080, type: ESP_IP6_ADDR_IS_LINK_LOCAL
+I (6608) ws_server: Starting server on port: '80'
+I (6618) ws_server: Registering URI handlers
+I (6618) main_task: Returned from app_main()
+I (363958) wifi:<ba-add>idx:1 (ifx:0, 6c:8d:77:5d:98:a3), tid:0, ssn:0, winSize:64
+I (364038) ws_server: Handshake done, the new connection was opened
+I (399998) ws_server: frame len is 7
+I (399998) ws_server: Got packet with message: findAps
+I (399998) ws_server: Packet type: 1
+I (400008) ws_server: Find APs Request Acknowleged. Initiating Scan...
+I (402918) scan: iter 0: Total APs scanned = 25
+I (402918) scan: Processing APs...
+I (402918) scan: Iter 0 done
+I (405818) scan: iter 1: Total APs scanned = 19
+I (405818) scan: Processing APs...
+I (405818) scan: Iter 1 done
+I (408718) scan: iter 2: Total APs scanned = 20
+I (408718) scan: Processing APs...
+I (408718) scan: Iter 2 done
+I (411618) scan: iter 3: Total APs scanned = 19
+I (411618) scan: Processing APs...
+I (411618) scan: Iter 3 done
+I (414518) scan: iter 4: Total APs scanned = 18
+I (414518) scan: Processing APs...
+I (414518) scan: Iter 4 done
+I (417418) scan: iter 5: Total APs scanned = 19
+I (417418) scan: Processing APs...
+I (417418) scan: Iter 5 done
+I (420318) scan: iter 6: Total APs scanned = 24
+I (420318) scan: Processing APs...
+I (420318) scan: Iter 6 done
+I (423218) scan: iter 7: Total APs scanned = 20
+I (423218) scan: Processing APs...
+I (423218) scan: Iter 7 done
+I (426118) scan: iter 8: Total APs scanned = 18
+I (426118) scan: Processing APs...
+I (426118) scan: Iter 8 done
+I (429018) scan: iter 9: Total APs scanned = 19
+I (429018) scan: Processing APs...
+I (429018) scan: Iter 9 done
+I (431918) scan: iter 10: Total APs scanned = 22
+I (431918) scan: Processing APs...
+I (431918) scan: Iter 10 done
+I (434818) scan: iter 11: Total APs scanned = 21
+I (434818) scan: Processing APs...
+I (434818) scan: Iter 11 done
+I (437718) scan: iter 12: Total APs scanned = 18
+I (437718) scan: Processing APs...
+I (437718) scan: Iter 12 done
+I (440618) scan: iter 13: Total APs scanned = 21
+I (440618) scan: Processing APs...
+I (440618) scan: Iter 13 done
+I (443518) scan: iter 14: Total APs scanned = 21
+I (443518) scan: Processing APs...
+I (443518) scan: Iter 14 done
+I (446418) scan: iter 15: Total APs scanned = 23
+I (446418) scan: Processing APs...
+I (446418) scan: Iter 15 done
+I (449318) scan: iter 16: Total APs scanned = 19
+I (449318) scan: Processing APs...
+I (449318) scan: Iter 16 done
+I (452218) scan: iter 17: Total APs scanned = 22
+I (452218) scan: Processing APs...
+I (452218) scan: Iter 17 done
+I (455118) scan: iter 18: Total APs scanned = 17
+I (455118) scan: Processing APs...
+I (455118) scan: Iter 18 done
+I (458018) scan: iter 19: Total APs scanned = 20
+I (458018) scan: Processing APs...
+I (458018) scan: Iter 19 done
+I (458018) scan: Scan code exit...
+I (458028) ws_server: Send Complete
+
+I (458028) ws_server:
+88B1E1974120, -62, 17
+88B1E1974121, -63, 17
+88B1E199C301, -78, 15
+88B1E199C300, -77, 17
+6C8D775D98A4, -77, 20
+6C8D775D98A3, -77, 20
+88B1E19726C1, -71, 17
+88B1E19726C0, -71, 19
+6C8D775D98A2, -77, 20
+88B1E19D28E1, -82, 18
+88B1E19D2200, -76, 19
+88B1E19D2201, -76, 20
+88B1E19D28E0, -83, 16
+88B1E1466620, -83, 17
+88B1E19D12E1, -84, 14
+88B1E1466621, -82, 17
+F01D2DE74563, -86, 12
+88B1E19D12E0, -83, 18
+88B1E1974581, -85, 19
+F01D2DE74562, -88, 10
+88B1E1974580, -85, 12
+88B1E14B78C1, -88, 1
+F01D2DE77AE2, -92, 4
+88B1E146CE01, -91, 2
+F01D2DE77AE3, -92, 4
+88B1E14B6E81, -92, 1
+F01D2DE780E3, -90, 2
+```
