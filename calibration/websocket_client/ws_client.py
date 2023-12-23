@@ -1,29 +1,73 @@
-import asyncio
-import websockets
+import process_aps
+import websocket
+import warnings
+import _thread
+import sqlite3
+import time
+import sys
 
-async def connect_to_server():
-    esp32_ip_address = '172.22.196.117'
-    port = 80
-    socket_address = f'ws://{esp32_ip_address}:{port}/ws'
+# Suppress all warnings
+warnings.filterwarnings("ignore")
 
-    async with websockets.connect(socket_address) as websocket:
-        print("WebSocket connection opened")
+# Lock to control thread pausing and resuming
+thread_lock = _thread.allocate_lock()
+pause_thread = False
 
-        # Start a separate task to read user input
-        asyncio.ensure_future(send_user_input(websocket))
 
-        # Continuously receive and log messages from the server
-        while True:
-            response = await websocket.recv()
-            print(f"Received from server: {response}")
+def on_message(ws, message):
 
-async def send_user_input(websocket):
-    # Continuously read user input and send it to the server
+    print(f"Received message: {message}")
+
+    db = "devdb.db"
+    connection = sqlite3.connect(db)
+    process_aps.process_wss_res(message)
+    process_aps.update_fv(connection)
+    process_aps.construct_fingerprint(connection)
+
+    connection.close()
+
+    global pause_thread
+    pause_thread = True
+
+def on_error(ws, error):
+    print(f"Error occurred: {error}")
+
+def on_close(ws, close_status_code, close_msg):
+    print(f"Connection closed with status code {close_status_code}: {close_msg}")
+
+def on_open(ws):
+    print("Opened connection")
+
+    # Start a new thread for user input
+    _thread.start_new_thread(send_user_input, (ws,))
+
+def send_user_input(ws):
+    global pause_thread
     while True:
-        user_input = input("Enter message to send to server (or 'exit' to quit): ")
+        with thread_lock:
+            if pause_thread:
+                pause_thread = False
+                _thread.exit() 
+
+        user_input = input("Enter message to send (or type 'exit' to close the connection): ")
         if user_input.lower() == 'exit':
+            ws.close()
             break
-        await websocket.send(user_input)
+        else:
+            if user_input == '':
+                continue
+            ws.send(user_input)
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(connect_to_server())
+    websocket.enableTrace(False)
+    esp32_ipv4_ip_addr = input("Enter WSS addr: ")
+    ws = websocket.WebSocketApp('ws://' + esp32_ipv4_ip_addr + ':80/ws',
+                                on_open=on_open,
+                                on_message=on_message,
+                                on_error=on_error,
+                                on_close=on_close)
+
+    # Run the WebSocket connection in the main thread
+    ws.run_forever()
+
+    print("WebSocket connection closed.")
