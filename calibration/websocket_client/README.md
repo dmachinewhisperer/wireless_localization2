@@ -48,7 +48,7 @@ tables:
 db_clean.py database_name
 eg: db_clean.py devdb.db
 
-db_read.py: reads table rows and prints them on the commandline
+`db_read.py`: reads table rows and prints them on the commandline
 
 #### Usage
 cmd: py db_read.py db_name tb_name n_rows
