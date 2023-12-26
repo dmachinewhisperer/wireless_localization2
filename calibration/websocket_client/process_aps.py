@@ -10,13 +10,17 @@ def process_wss_res(response):
     data = []
     scan_results = response.split('\n')
     for result in scan_results:
-        components = result.strip().split(', ')
+        components = result.strip().split(',')
         bssid = components[0]
         rssi = int(components[1])
         noccur = int(components[2])
     
-    data.append((bssid, rssi, noccur))
-    detected_aps = pd.DataFrame(data, columns=['bssid', 'dBm_signal', 'noccur'])
+        data.append((bssid, (rssi, noccur)))
+    
+    #dBm_signal = (rssi, noccur)
+    detected_aps = pd.DataFrame(data, columns=['bssid', 'dBm_signal'])
+
+    print(detected_aps)
 
 #feature vector ordering 
 def create_fv_ordering_db(connection):
