@@ -1,0 +1,37 @@
+menu "Config Websocket Client"
+
+    choice WEBSOCKET_URI_SOURCE
+        prompt "Websocket URI source"
+        default WEBSOCKET_URI_FROM_STDIN
+        help
+            Selects the source of the URI used in the example.
+
+        config WEBSOCKET_URI_FROM_STRING
+            bool "From string"
+
+        config WEBSOCKET_URI_FROM_STDIN
+            bool "From stdin"
+    endchoice
+
+    config WEBSOCKET_URI
+        string "Websocket endpoint URI"
+        depends on WEBSOCKET_URI_FROM_STRING
+        default "ws://echo.websocket.events"
+        help
+            URL of websocket endpoint this example connects to and sends echo
+
+    if CONFIG_IDF_TARGET = "linux"
+      config GCOV_ENABLED
+          bool "Coverage analyzer"
+          default n
+          help
+              Enables coverage analyzing for host tests.
+      endif
+
+    config ESP_WS_CLIENT_ENABLE_DYNAMIC_BUFFER
+        bool "Enable websocket client dynamic buffer for send and receive data"
+        default n
+        help
+            Enable this option will reallocated buffer when send or receive data and free them when end of use.
+            This can save about 2 KB memory when no websocket data send and receive.
+endmenu
