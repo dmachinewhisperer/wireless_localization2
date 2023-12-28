@@ -20,7 +20,7 @@ def process_wss_res(response):
     #dBm_signal = (rssi, noccur)
     detected_aps = pd.DataFrame(data, columns=['bssid', 'dBm_signal'])
 
-    print(detected_aps)
+    #print(detected_aps)
 
 #feature vector ordering 
 def create_fv_ordering_db(connection):
