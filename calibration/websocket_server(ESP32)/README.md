@@ -1,5 +1,5 @@
 # Websocket server
-The example starts a websocket server on a local network. You need a websocket client to interact with the server. The `websocket_client` in the root directory can be used for this interaction. 
+The application starts a websocket server on a local network. You need a websocket client to interact with the server. The `websocket_client` in the root directory can be used for this interaction. 
 
 ## How to Use
 
@@ -29,10 +29,18 @@ See the ESP-IDF  Guide for full steps to configure and use ESP-IDF to build proj
 
 ## Scanning For WAPs
 
-* To scan for WAPs, the websocket_client must send "findAps" to the server. Upon reciept of the of this string, It starts scanning for WAPs. 
+* To scan for WAPs, the websocket_client must send a trigger_string to the server. Upon reciept of the of this string, It starts scanning for WAPs. 
 * To handle signal fluctuations, the scan is carried out 20 times(can be modfied in the `wifi_scan` using the `max_scan` variable in the scan component).
 * To be included in the final result, a WAP must show up at least 75% of the number of times the scan is carried out.(can be modifed in the `wifi_scan` using the `thresh` variable)
 * The RSSIs is averaged and sent back to the client after the scan completes. 
+
+### Trigger Strings
+Two trigger strings are defined:
+
+* `FindApsAuto` : Upon receipt of this string, the server initiates an indefinite WAP scan in a loop. Results are sent to the the websocket client as soon as a scan completes. The client must make arrangements to persist this information in a database. 
+```Note that the server cannot service any subsequent trigger string once it enters this loop. ```
+
+* `FindApsManu` : 20 scans are carried out consecutively, and RSSIs averaged. Then sent to the client.
 
 
 ### Format of the Scan Output Sent to the client
@@ -79,7 +87,7 @@ I (6618) main_task: Returned from app_main()
 I (363958) wifi:<ba-add>idx:1 (ifx:0, 6c:8d:77:5d:98:a3), tid:0, ssn:0, winSize:64
 I (364038) ws_server: Handshake done, the new connection was opened
 I (399998) ws_server: frame len is 7
-I (399998) ws_server: Got packet with message: findAps
+I (399998) ws_server: Got packet with message: findApsManu
 I (399998) ws_server: Packet type: 1
 I (400008) ws_server: Find APs Request Acknowleged. Initiating Scan...
 I (402918) scan: iter 0: Total APs scanned = 25
