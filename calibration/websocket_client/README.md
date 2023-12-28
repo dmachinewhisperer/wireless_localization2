@@ -22,11 +22,28 @@ See the README in `websocket_server(ESP32)` on how to find out `ws_server_ip_add
 
 ## Scanning For WAPs
 
-When the client is connected to the server, a text input field is presented to the user. 
+### Trigger Strings
+Two trigger strings are defined:
 
-* To scan for WAPs, the websocket client must send "findAps" to the server. Upon reciept of the of this string, It starts scanning for WAPs. The scan takes about 1 - 2 mins to complete. The data is sent back to the client. 
+* `FindApsAuto` : Upon receipt of this string, the server initiates an indefinite WAP scan in a loop. Results are sent to the the websocket client as soon as a scan completes. The client must make arrangements to persist this information in a database. 
+```Note that the server cannot service any subsequent trigger string once it enters this loop. ```
 
-* Alternatively, client may send "findApsFast". The server performs a single scan and returns the sensed WAPs. Takes about 2 - 5 secs to get the scan results
+* `FindApsManu` : 20 scans are carried out consecutively, and RSSIs averaged. Then sent back to the client. In this mode, you will not be prompted to enter the location tag until server returns the result. 
+
+### Setting up the client for Auto Scan
+```
+PS wireless_localization2\calibration\websocket_client> py ws_client.py
+Enter WSS addr: 1.1.1.1
+Enter calibration type:(auto or manual): auto
+Enter location tag: SB 305
+```
+
+### Setting up the client for Manual Scan
+```
+PS wireless_localization2\calibration\websocket_client> py ws_client.py
+Enter WSS addr: 1.1.1.1
+Enter calibration type:(auto or manual): manual
+```
 
 ### Format of the Scan Output Sent to the client
 | BSSID | SSID | ENCRYPTION| CHANNEL | RSSI | NO OF OCCURENCES |
