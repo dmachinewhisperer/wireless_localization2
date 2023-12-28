@@ -1,5 +1,5 @@
-# Websocket server
-The example starts a websocket server on a local network. You need a websocket client to interact with the server. The `websocket_client` in the root directory can be used for this interaction. 
+# Websocket Client
+The application starts and maintains a websocket client on a local network. You need a websocket server to use with the client.  
 
 ## How to Use
 
@@ -13,7 +13,10 @@ See the CMakeLists.txt in the component and main directories
 ### Configure the project
 
 * Open the project configuration menu (`idf.py menuconfig`)
-* Configure Wi-Fi under "Example Connection Configuration" menu. 
+* Configure Connection under "Example Connection Configuration" menu. 
+* Configure the components under
+    `Components->Wi-Fi Scan` Configuration and `Components->Config Websocket Client`
+
 
 ### Build and Flash
 
@@ -27,12 +30,16 @@ idf.py -p PORT flash monitor
 
 See the ESP-IDF  Guide for full steps to configure and use ESP-IDF to build projects.
 
-## Scanning For WAPs
+## Localization using WAPs
 
-* To scan for WAPs, the websocket_client must send "findAps" to the server. Upon reciept of the of this string, It starts scanning for WAPs. 
-* To handle signal fluctuations, the scan is carried out 20 times(can be modfied in the `wifi_scan` using the `max_scan` variable in the scan component).
-* To be included in the final result, a WAP must show up at least 75% of the number of times the scan is carried out.(can be modifed in the `wifi_scan` using the `thresh` variable)
-* The RSSIs is averaged and sent back to the client after the scan completes. 
+* To localize, the client repeatedly scans for WAPs, parses the scan results and sends it to the localization engine running on a server. 
+* Decoupling the engine from the application 
+
+* The server, on reciept on the scan results, server uses a predefined BSSID ordering to convert it to a feature vector. Inference is run on the input and location is determined and returned to the client via websocket. 
+
+* To handle signal fluctuations, the scan is carried out n times amd averaged before being sent for inference at the expense of real time performance degradation(can be modfied in the `wifi_scan` using the `max_scan` variable in the scan component).
+
+* n > 2 degrade real time performance
 
 
 ### Format of the Scan Output Sent to the client
