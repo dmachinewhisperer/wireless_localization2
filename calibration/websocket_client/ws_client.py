@@ -16,6 +16,9 @@ exception = None;
 
 wss_response = None
 
+calib_type = None
+location_tag = None
+
 def on_message(ws, message):
     global wss_response
 
@@ -44,7 +47,7 @@ def send_user_input(ws):
             connection = sqlite3.connect(db)
             process_aps.process_wss_res(wss_response)
             process_aps.update_fv(connection)
-            process_aps.construct_fingerprint(connection)
+            process_aps.construct_fingerprint(connection, location_tag, calib_type)
             connection.close()
             wss_response = None
 
@@ -58,11 +61,25 @@ def send_user_input(ws):
             ws.send(user_input)
 
 if __name__ == "__main__":
+    global calib_type, location_tag
+
     websocket.enableTrace(False)
+
     esp32_ipv4_ip_addr = ''
+    location_tag = ''
+    calib_type = ''
+
+    
     while esp32_ipv4_ip_addr =='':
         esp32_ipv4_ip_addr = input("Enter WSS addr: ")
-
+    
+    while(calib_type =='' or calib_type !='auto' or calib_type != 'manual'):
+        calib_type = input("Enter calibration type:(auto or manual): ")
+    
+    if(calib_type == 'auto'):
+        while(location_tag == ''):
+            location_tag = input("Enter location tag: ")
+    
     ws = websocket.WebSocketApp('ws://' + esp32_ipv4_ip_addr + ':80/ws',
                                 on_open=on_open,
                                 on_message=on_message,

@@ -78,7 +78,7 @@ def location_exists(connection, location):
     return cursor.fetchone()[0] > 0
 
 #contructs and maintains fingeprints ordering according to FV ordering
-def construct_fingerprint(connection, return_fp = False):
+def construct_fingerprint(connection, location_tag = '', calib_type = 'auto', return_fp = False):
     global detected_aps
 
     create_fingerprint_db(connection)
@@ -93,9 +93,13 @@ def construct_fingerprint(connection, return_fp = False):
     if detected_aps is None:
         print("detected_aps is not populated")
         return    
-    location = ''
-    while location =='':
-        location = input("Enter Location tAG: ")
+    
+    location = location_tag
+
+    if calib_type == 'manual':
+        while location =='':
+            location = input("Enter Location tAG: ")
+    
     df = detected_aps[['bssid', 'dBm_signal']]
     fingerprint_elements = df.set_index('bssid')['dBm_signal'].to_dict()
 
