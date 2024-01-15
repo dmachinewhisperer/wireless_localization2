@@ -11,6 +11,8 @@
 
 #include "ws_client.h"
 
+#include "mqtt_client1.h"
+
 static const char *TAG = "main";
 
 void app_main(void)
@@ -33,4 +35,5 @@ void app_main(void)
 
     /* Start the client for the first time */
     start_websocket_client();
+    start_mqtt_client();
 }
