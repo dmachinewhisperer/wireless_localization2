@@ -1,0 +1,1 @@
+loaded_knn_model = joblib.load('knn_loc_algorithm.sav')
