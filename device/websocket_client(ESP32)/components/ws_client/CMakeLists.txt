@@ -9,5 +9,5 @@ endif()
 
 idf_component_register(SRCS "ws_client.c" "esp_websocket_client.c"
                 INCLUDE_DIRS "."
-                REQUIRES lwip esp-tls tcp_transport http_parser scan protocol_examples_common
+                REQUIRES lwip esp-tls tcp_transport http_parser scan mqtt_client1 protocol_examples_common
                 PRIV_REQUIRES esp_timer esp_event)
