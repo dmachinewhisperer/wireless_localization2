@@ -42,6 +42,8 @@ Each sub-project contains a detailed README on how to setup the project and its 
 ## Read the Thesis
 Find the thesis [Here](https://github.com)
 
+## Read the Conference Paper
+Find the Conference paper [Here](https://github.com)
 ## Contributing
 - Ngari Crisphine: crisphine96@gmail.com
 - Asogwa Emmanuel: asogwaemmanuel36@gmail.com 
