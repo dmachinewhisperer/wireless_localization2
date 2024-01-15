@@ -12,7 +12,10 @@
 #include "scan.h"
 #include "esp_websocket_client.h"
 
+#include "mqtt_client1.h"
+
 static const char *TAG = "ws_client";
+
 
 static void log_error_if_nonzero(const char *message, int error_code)
 {
@@ -66,7 +69,11 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
             ESP_LOGW(TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
         }
 
-        //Code to display recieved inference
+        //Code to send recieved location to output device
+
+
+        //publish this nodes location to broker, under its topic
+        publish(PRI_NODE_TOPIC, (char *)data->data_ptr);
 
         break;
     case WEBSOCKET_EVENT_ERROR:
