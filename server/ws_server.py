@@ -1,37 +1,40 @@
 import joblib
 import socket
 import asyncio
+import sqlite3
 import websockets
 import process_aps_online
 
 async def server_handler(websocket, path):
     global knn_loc_algorithm
 
+    #connect to database
     db = "devdb.db"
     connection = sqlite3.connect(db)
+
     while True:
         try:
-            message = await websocket.recv()
-            print(f"Received message: {message}")
+            request = await websocket.recv()
+            print(f"Received Request: {request}")
 
-            process_aps_online.process_wss_res(wss_response)
-            fingerprint = process_aps_online.construct_fingerprint(connection)
-
+            process_aps_online.process_request(request)
+            fingerprint = process_aps_online.construct_fingerprint_online(connection)
+            fingerprint = list(fingerprint)
             #Guard against target being Out Of Range (OOF)
             non_zero = 0
-            len_fingeprint = len(fingeprint)
-            for j in range(len(len_fingeprint)):
-                if fingeprint[j] != 0:
+            len_fingerprint = len(fingerprint)
+            for j in range(len_fingerprint):
+                if fingerprint[j] != 0:
                     non_zero = non_zero + 1
             #############################################
 
             
-            if non_zero < (0.1 * len_fingeprint):
+            if non_zero < (0.1 * len_fingerprint):
                 message = "OOF"
             else:
-                message = knn_loc_algorithm.predict(fingerprint)
+                message = knn_loc_algorithm.predict([fingerprint])
 
-            await websocket.send(message)
+            await websocket.send(message[0])
             print(f"Sent message back: {message}")
         except websockets.exceptions.ConnectionClosedOK:
             print("Connection closed by the client.")
@@ -51,11 +54,11 @@ if __name__ == "__main__":
         local_ip = None
 
     if local_ip:
-        print(f"WebSocket Server running at ws://{local_ip}:8000")
-
-        start_server = websockets.serve(server_handler, local_ip, 8000)
-
+        start_server = websockets.serve(server_handler, local_ip, 80)
+        print(f"WebSocket Server running at ws://{local_ip}:80")
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
     else:
         print("Exiting...")
+
+    
