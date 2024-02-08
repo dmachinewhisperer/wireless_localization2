@@ -4,11 +4,11 @@ import json
 
 detected_aps = None
 
-#convert websocket servers plain text response to df
-def process_wss_res(response):
+#convert websocket servers plain text request to df
+def process_request(request):
     global detected_aps
     data = []
-    scan_results = response.split('\n')
+    scan_results = request.split('\n')
     for result in scan_results:
         components = result.strip().split(',')
         bssid = components[0]
@@ -29,8 +29,6 @@ def process_wss_res(response):
 def construct_fingerprint_online(connection):
     global detected_aps
 
-    create_fingerprint_db(connection)
-    cursor = connection.cursor()
     
     if detected_aps is None:
         print("detected_aps is not populated")
@@ -57,4 +55,4 @@ def construct_fingerprint_online(connection):
     #reset wsc request
     detected_aps = None
 
-    return fingeprint
+    return fingerprint
