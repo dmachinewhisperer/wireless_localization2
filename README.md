@@ -11,7 +11,7 @@ End Device:
 
 Server:
 - Target Board: Any single-board-computer with wireless communication capabilities.(General purpose computers will do) 
-- Development Board: Rapsberry Pi-4
+- Development Board: Raspberry-Pi 3A+ model
 - Development Environment: vanilla python
 
 ## Layout of the Repository
@@ -51,5 +51,5 @@ Find the Conference paper [Here](https://github.com)
 ## License
 
 ## Acknowledgments
-Project Supervisor: Dr. T Nagajuna: ntelgram@gitam.in
+Project Supervisor: Dr. T Nargajuna: ntelgram@gitam.in
 
