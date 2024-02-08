@@ -1,10 +1,10 @@
-menu "Config Websocket Client"
+menu "Websocket Client Config"
 
     choice WEBSOCKET_URI_SOURCE
         prompt "Websocket URI source"
         default WEBSOCKET_URI_FROM_STDIN
         help
-            Selects the source of the URI used in the example.
+            Selects the source of websocket server URI.
 
         config WEBSOCKET_URI_FROM_STRING
             bool "From string"
@@ -18,7 +18,7 @@ menu "Config Websocket Client"
         depends on WEBSOCKET_URI_FROM_STRING
         default "ws://echo.websocket.events"
         help
-            URL of websocket endpoint this example connects to and sends echo
+            URL of websocket endpoint of server
 
     if CONFIG_IDF_TARGET = "linux"
       config GCOV_ENABLED
