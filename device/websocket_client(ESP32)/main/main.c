@@ -33,7 +33,8 @@ void app_main(void)
      */
     ESP_ERROR_CHECK(example_connect());
 
-    /* Start the client for the first time */
-    start_websocket_client();
+    /* Start the clients for the first time */
+    /*mqtt client must be started before ws client*/
     start_mqtt_client();
+    start_websocket_client();
 }
