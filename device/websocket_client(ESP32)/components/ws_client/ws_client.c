@@ -53,12 +53,21 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
         break;
     case WEBSOCKET_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "WEBSOCKET_EVENT_DISCONNECTED");
+        esp_err_t status = ESP_FAIL;
+        while(status != ESP_OK){
+            ESP_LOGI(TAG, "Attempting server reconnect...");
+            status = esp_websocket_client_start(data->client);
+            vTaskDelay(9000/portTICK_PERIOD_MS);
+            }
+
+        /**
         log_error_if_nonzero("HTTP status code",  data->error_handle.esp_ws_handshake_status_code);
         if (data->error_handle.error_type == WEBSOCKET_ERROR_TYPE_TCP_TRANSPORT) {
             log_error_if_nonzero("reported from esp-tls", data->error_handle.esp_tls_last_esp_err);
             log_error_if_nonzero("reported from tls stack", data->error_handle.esp_tls_stack_err);
             log_error_if_nonzero("captured as transport's socket errno",  data->error_handle.esp_transport_sock_errno);
         }
+        **/
         break;
     case WEBSOCKET_EVENT_DATA:
         ESP_LOGI(TAG, "WEBSOCKET_EVENT_DATA");
@@ -107,10 +116,14 @@ void start_websocket_client(void)
 
     ESP_LOGI(TAG, "Connecting to %s...", websocket_cfg.uri);
 
-    esp_websocket_client_handle_t client = esp_websocket_client_init(&websocket_cfg);
-    esp_websocket_register_events(client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *)client);
+    esp_websocket_client_handle_t ws_client = esp_websocket_client_init(&websocket_cfg);
+    esp_websocket_register_events(ws_client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *)ws_client);
  
-    esp_websocket_client_start(client);
+    esp_err_t status = ESP_FAIL;
+    while(status != ESP_OK){
+        ESP_LOGI(TAG, "Attempting server connect...");
+        status = esp_websocket_client_start(ws_client);
+    }
 
 
     char *scan_results_buf = NULL;
@@ -123,14 +136,17 @@ void start_websocket_client(void)
         wifi_scan(&scan_results_buf, &nbuf, verbose);
         //wifi_scan2(&scan_results_buf, &nbuf, verbose, max_scans);
 
-        if(esp_websocket_client_is_connected(client)){
+        if(esp_websocket_client_is_connected(ws_client)){
             ESP_LOGI(TAG, "Sending Results to Server...");
-            esp_websocket_client_send_text(client, scan_results_buf, nbuf, portMAX_DELAY);
+            esp_websocket_client_send_text(ws_client, scan_results_buf, nbuf, portMAX_DELAY);
         
         } else{
             ESP_LOGI(TAG, "Disconnected From Server");
         }
 
+        //free scan_results_buf
+        free(scan_results_buf);
+        vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 
 }
