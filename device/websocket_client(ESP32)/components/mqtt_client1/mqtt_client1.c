@@ -149,9 +149,7 @@ static void unsubscribe(char *topic)
 
 void start_mqtt_client(void)
 {
-    esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = CONFIG_BROKER_URL,
-    };
+    esp_mqtt_client_config_t mqtt_cfg = {};
 #if CONFIG_BROKER_URL_FROM_STDIN
     char line[128];
 
@@ -161,6 +159,8 @@ void start_mqtt_client(void)
     mqtt_cfg.broker.address.uri = line;
     ESP_LOGI(TAG, "Endpoint uri: %s\n", line);
 
+#else
+    mqtt_cfg.broker.address.uri = CONFIG_BROKER_URL;
 #endif /* CONFIG_BROKER_URL_FROM_STDIN */
 
     client = esp_mqtt_client_init(&mqtt_cfg);
