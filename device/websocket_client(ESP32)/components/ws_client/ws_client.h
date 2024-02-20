@@ -12,6 +12,7 @@
 #include "freertos/FreeRTOS.h"
 #include "protocol_examples_common.h"
 
-void start_websocket_client(void); 
+
+void start_websocket_client(char *endpoint); 
 
 #endif

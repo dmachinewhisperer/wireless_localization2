@@ -12,7 +12,10 @@
 #include "scan.h"
 #include "esp_websocket_client.h"
 
+#include "ws_client.h"
 #include "mqtt_client1.h"
+
+#include "init.h"
 
 static const char *TAG = "ws_client";
 
@@ -78,11 +81,14 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
             ESP_LOGW(TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
         }
 
-        //Code to send recieved location to output device
+        //Code to send recieved location of current node to output device
 
+        //strcat(node1_prompt, (char *)data->data_ptr);
+        ssd1306_display_text(&dev, 2, (char *)data->data_ptr, 6, false);
 
-        //publish this nodes location to broker, under its topic
-        publish(PRI_NODE_TOPIC, (char *)data->data_ptr);
+        
+        //publish this nodes location to broker, under its public id
+        publish((char *)self_id, (char *)data->data_ptr);
 
         break;
     case WEBSOCKET_EVENT_ERROR:
@@ -97,22 +103,12 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
     }
 }
 
-void start_websocket_client(void)
+void start_websocket_client(char *endpoint)
 {
+    ESP_LOGI(TAG, "Endpoint uri: %s\n", endpoint);
+
     esp_websocket_client_config_t websocket_cfg = {};
-
-#if CONFIG_WEBSOCKET_URI_FROM_STDIN
-    char line[128];
-
-    ESP_LOGI(TAG, "Please enter uri of websocket endpoint");
-    get_string(line, sizeof(line));
-
-    websocket_cfg.uri = line;
-    ESP_LOGI(TAG, "Endpoint uri: %s\n", line);
-
-#else
-    websocket_cfg.uri = CONFIG_WEBSOCKET_URI;
-#endif /* CONFIG_WEBSOCKET_URI_FROM_STDIN */
+    websocket_cfg.uri = endpoint;
 
     ESP_LOGI(TAG, "Connecting to %s...", websocket_cfg.uri);
 
