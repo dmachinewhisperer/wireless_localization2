@@ -1,3 +1,6 @@
 build/
 __pycache__/
 devdb.db
+/component/ssd1306*
+
+#!/component/ssd1306/README.md
