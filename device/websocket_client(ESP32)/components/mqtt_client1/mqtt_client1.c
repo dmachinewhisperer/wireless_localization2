@@ -21,6 +21,7 @@
 #include "mqtt_client.h"
 
 #include "mqtt_client1.h"
+#include "init.h"
 
 static const char *TAG = "MQTT_CLIENT";
 
@@ -91,7 +92,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
 
-        //logic to write to an output device
+        //Code to send recieved location to of tracked node to output device
+
+        //strcat(node2_prompt, (char *)event->data);
+        ssd1306_display_text(&dev, 3, (char *)event->data, 6, false);
 
         break;
     case MQTT_EVENT_ERROR:
@@ -147,27 +151,20 @@ static void unsubscribe(char *topic)
     
 }
 
-void start_mqtt_client(void)
+void start_mqtt_client(char *endpoint)
 {
+    
+    ESP_LOGI(TAG, "MQTT Broker Endpoint: %s\n", endpoint);
+
     esp_mqtt_client_config_t mqtt_cfg = {};
-#if CONFIG_BROKER_URL_FROM_STDIN
-    char line[128];
-
-    ESP_LOGI(TAG, "Please enter uri of mqtt broker endpoint");
-    get_string(line, sizeof(line));
-
-    mqtt_cfg.broker.address.uri = line;
-    ESP_LOGI(TAG, "Endpoint uri: %s\n", line);
-
-#else
-    mqtt_cfg.broker.address.uri = CONFIG_BROKER_URL;
-#endif /* CONFIG_BROKER_URL_FROM_STDIN */
+    mqtt_cfg.broker.address.uri = endpoint;
 
     client = esp_mqtt_client_init(&mqtt_cfg);
-    /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
+
+    /* The last argument may be used to pass data to the event handler */
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
 
     //subscribe to recieve location updates of other nodes
-    subscribe(SEC_NODE_TOPIC1);
+    subscribe((char *)ext1_id);
 }
