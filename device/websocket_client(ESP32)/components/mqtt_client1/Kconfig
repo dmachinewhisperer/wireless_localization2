@@ -1,0 +1,22 @@
+menu "MQTT Client Config"
+    choice BROKER_URI_SOURCE
+        prompt "Broker endpoint"
+        default BROKER_URL_FROM_STDIN
+        help
+            Selects the source of Broker server endpoint.
+
+        config BROKER_URL_FROM_STRING
+            bool "From string"
+
+        config BROKER_URL_FROM_STDIN
+            bool "From stdin"
+    endchoice
+
+    config BROKER_URL
+        string "Broker endpoint"
+        depends on BROKER_URL_FROM_STRING
+        default "mqtt://echo.mqtts.events"
+        help
+            URL of Broker endpoint
+
+endmenu
