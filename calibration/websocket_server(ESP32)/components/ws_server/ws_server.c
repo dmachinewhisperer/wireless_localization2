@@ -153,6 +153,11 @@ static esp_err_t controller_handler(httpd_req_t *req)
                 ret = httpd_ws_send_frame(req, &ws_pkt);
                 
                 free(scan_results_buf);
+
+                if(ret != ESP_OK){
+                    ESP_LOGI(TAG, "Send failed. Reconnect client");
+                    return !ESP_OK;
+                }
                 ESP_LOGI(TAG, "Sent scan results %d\n", ++nth_scan);
             }
             

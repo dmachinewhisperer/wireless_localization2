@@ -61,7 +61,7 @@ def send_user_input(ws):
             ws.send(user_input)
 
 if __name__ == "__main__":
-    global calib_type, location_tag
+    #global calib_type, location_tag
 
     websocket.enableTrace(False)
 
@@ -73,8 +73,10 @@ if __name__ == "__main__":
     while esp32_ipv4_ip_addr =='':
         esp32_ipv4_ip_addr = input("Enter WSS addr: ")
     
-    while(calib_type =='' or calib_type !='auto' or calib_type != 'manual'):
+    while(calib_type ==''):
         calib_type = input("Enter calibration type:(auto or manual): ")
+        if calib_type !='auto' or calib_type != 'manual': 
+            break
     
     if(calib_type == 'auto'):
         while(location_tag == ''):
