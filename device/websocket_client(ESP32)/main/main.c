@@ -44,7 +44,7 @@ void app_main(void)
      *if(get_line())
      */
 
-    /* attempt to get endpoints of broker and server from stdin and write to nvs
+    /* attempt to get endpoints of broker and server from stdin and write to nvs using oneshot tasks
      * if the user does not input them after 1 min, TIMEOUT ocurrs
      * attempt to read previous ones stored in nvs
      * both tasks self -delete after completing
