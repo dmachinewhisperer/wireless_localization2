@@ -56,13 +56,14 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
         break;
     case WEBSOCKET_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "WEBSOCKET_EVENT_DISCONNECTED");
+        /**
         esp_err_t status = ESP_FAIL;
         while(status != ESP_OK){
             ESP_LOGI(TAG, "Attempting server reconnect...");
             status = esp_websocket_client_start(data->client);
             vTaskDelay(9000/portTICK_PERIOD_MS);
             }
-
+        **/
         /**
         log_error_if_nonzero("HTTP status code",  data->error_handle.esp_ws_handshake_status_code);
         if (data->error_handle.error_type == WEBSOCKET_ERROR_TYPE_TCP_TRANSPORT) {
@@ -84,6 +85,7 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
         //Code to send recieved location of current node to output device
 
         //strcat(node1_prompt, (char *)data->data_ptr);
+        ssd1306_clear_line(&dev, 2, false);
         ssd1306_display_text(&dev, 2, (char *)data->data_ptr, 6, false);
 
         
@@ -105,10 +107,15 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
 
 void start_websocket_client(char *endpoint)
 {
+    ssd1306_display_text(&dev, 3, "int tr setup...", 15, true);
+
     ESP_LOGI(TAG, "Endpoint uri: %s\n", endpoint);
 
     esp_websocket_client_config_t websocket_cfg = {};
     websocket_cfg.uri = endpoint;
+    websocket_cfg.network_timeout_ms = 20 * 1000; //Network timeout 20s
+    websocket_cfg.reconnect_timeout_ms = 3 * 1000; //reconnect timeout 3s
+    
 
     ESP_LOGI(TAG, "Connecting to %s...", websocket_cfg.uri);
 
