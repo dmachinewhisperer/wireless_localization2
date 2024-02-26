@@ -78,20 +78,19 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
         ESP_LOGI(TAG, "Received opcode=%d", data->op_code);
         if (data->op_code == 0x08 && data->data_len == 2) {
             ESP_LOGW(TAG, "Received closed message with code=%d", 256 * data->data_ptr[0] + data->data_ptr[1]);
-        } else {
+        } 
+        else if (data->op_code == 0x01) {
             ESP_LOGW(TAG, "Received=%.*s", data->data_len, (char *)data->data_ptr);
-        }
 
-        //Code to send recieved location of current node to output device
-
-        //strcat(node1_prompt, (char *)data->data_ptr);
+        //send location of current node to output device
         ssd1306_clear_line(&dev, 2, false);
         ssd1306_display_text(&dev, 2, (char *)data->data_ptr, 6, false);
-
         
         //publish this nodes location to broker, under its public id
         publish((char *)self_id, (char *)data->data_ptr);
+        }
 
+        //NOTE: network control messages(PINGPONG) are not being handled
         break;
     case WEBSOCKET_EVENT_ERROR:
         ESP_LOGI(TAG, "WEBSOCKET_EVENT_ERROR");
