@@ -72,6 +72,15 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        //once connected, subscribe to get location updates of tracked nodes
+        if(strcmp(ext1_id, "none") == 0){
+            ESP_LOGI(TAG, "No node to track. ext1_id is set to none");
+            ssd1306_clear_line(&dev, 3, false);
+            ssd1306_display_text(&dev, 3, "no ext node", 12, false);
+        }
+        else{
+            subscribe(ext1_id);
+        }
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -95,6 +104,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         //Code to send recieved location to of tracked node to output device
 
         //strcat(node2_prompt, (char *)event->data);
+        ssd1306_clear_line(&dev, 3, false);
         ssd1306_display_text(&dev, 3, (char *)event->data, 6, false);
 
         break;
@@ -153,6 +163,7 @@ static void unsubscribe(char *topic)
 
 void start_mqtt_client(char *endpoint)
 {
+    ssd1306_display_text(&dev, 2, "ext tr setup...", 15, true);
     
     ESP_LOGI(TAG, "MQTT Broker Endpoint: %s\n", endpoint);
 
@@ -164,7 +175,4 @@ void start_mqtt_client(char *endpoint)
     /* The last argument may be used to pass data to the event handler */
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
-
-    //subscribe to recieve location updates of other nodes
-    subscribe((char *)ext1_id);
 }
