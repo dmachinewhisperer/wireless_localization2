@@ -106,16 +106,14 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
 
 void start_websocket_client(char *endpoint)
 {
-    ssd1306_display_text(&dev, 3, "int tr setup...", 15, true);
+    ssd1306_display_text(&dev, 3, "int startup...", 15, true);
 
     ESP_LOGI(TAG, "Endpoint uri: %s\n", endpoint);
 
     esp_websocket_client_config_t websocket_cfg = {};
     websocket_cfg.uri = endpoint;
-    websocket_cfg.network_timeout_ms = 20 * 1000; //Network timeout 20s
     websocket_cfg.reconnect_timeout_ms = 3 * 1000; //reconnect timeout 3s
     
-
     ESP_LOGI(TAG, "Connecting to %s...", websocket_cfg.uri);
 
     esp_websocket_client_handle_t ws_client = esp_websocket_client_init(&websocket_cfg);
@@ -148,7 +146,9 @@ void start_websocket_client(char *endpoint)
 
         //free scan_results_buf
         free(scan_results_buf);
-        vTaskDelay(2000/portTICK_PERIOD_MS);
+        
+        //frequency of localization
+        vTaskDelay(10000/portTICK_PERIOD_MS);
     }
 
 }
