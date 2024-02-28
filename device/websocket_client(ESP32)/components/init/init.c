@@ -9,7 +9,7 @@
 
 #include "ssd1306.h"
 
-#define ENDPOINTS_INPUT_TIMEOUT 60 * 1000
+#define ENDPOINTS_INPUT_TIMEOUT 20 * 1000 //20s timeout
 
 static const char *TAG =  "init";
 
@@ -27,7 +27,7 @@ char self_id[20];
 /*mac address of the external device nodes to track
  *they also publishe their location state under this topic (topic is mac addr)
 */
-char *ext1_id;
+char ext1_id[20];
 
 SemaphoreHandle_t xSemaphore;
 SSD1306_t dev;
@@ -86,8 +86,14 @@ static esp_err_t persist_endpoints(){
         handle_error_code(err);
         return err;
     }
-    err = nvs_set_str(endpoints_handle, "ws_endpoint", ws_server_endpoint);
 
+    err = nvs_set_str(endpoints_handle, "ws_endpoint", ws_server_endpoint);
+    if (err != ESP_OK) {
+        handle_error_code(err);
+        return err;
+    }
+
+    err = nvs_set_str(endpoints_handle, "ext1_id", ext1_id);
     if (err != ESP_OK) {
         handle_error_code(err);
         return err;
@@ -121,7 +127,6 @@ static esp_err_t load_endpoints(){
         handle_error_code(err);
         return err;
     }
-
     err = nvs_get_str(endpoints_handle, "mqtt_endpoint", mqtt_broker_endpoint, &required_size);
     if (err != ESP_OK) {
         handle_error_code(err);
@@ -133,9 +138,19 @@ static esp_err_t load_endpoints(){
         handle_error_code(err);
         return err;
     }
-
     nvs_get_str(endpoints_handle, "ws_endpoint", ws_server_endpoint, &required_size);
+    if (err != ESP_OK) {
+        handle_error_code(err);
+        return err;
+    }
+
     
+    err = nvs_get_str(endpoints_handle, "ext1_id", NULL, &required_size);
+    if (err != ESP_OK) {
+        handle_error_code(err);
+        return err;
+    }
+    nvs_get_str(endpoints_handle, "ext1_id", ext1_id, &required_size);
     if (err != ESP_OK) {
         handle_error_code(err);
         return err;
@@ -157,14 +172,16 @@ static esp_err_t get_endpoints(){
 
     ESP_LOGI(TAG, "Please enter uri of mqtt broker endpoint");
     get_string(mqtt_broker_endpoint, sizeof(mqtt_broker_endpoint));
-
     ESP_LOGI(TAG, "Endpoint uri: %s\n", mqtt_broker_endpoint);
 
 
     ESP_LOGI(TAG, "Please enter uri of websocket endpoint");
     get_string(ws_server_endpoint, sizeof(ws_server_endpoint));
-
     ESP_LOGI(TAG, "Endpoint uri: %s\n", ws_server_endpoint);
+
+    ESP_LOGI(TAG, "Please id of node to track (MAC addr)");
+    get_string(ext1_id, sizeof(ext1_id));
+    ESP_LOGI(TAG, "Track Node MAC: %s\n", ext1_id);
 
     err = persist_endpoints();
     if(err == ESP_OK){
@@ -181,7 +198,9 @@ void init_display(){
     ssd1306_init(&dev, 128, 32);
     ssd1306_clear_screen(&dev, false);
 	ssd1306_contrast(&dev, 0xff);
-    ssd1306_display_text(&dev, 3, "Booting...", 10, true);
+    ssd1306_display_text(&dev, 0, "NavSense Beacon", 15, true);
+    ssd1306_display_text(&dev, 2, "Booting...", 10, true);
+    //NavSense Beacon
 }
 
 void set_device_public_id(){
@@ -209,6 +228,7 @@ void task_get_endpoints(void *pvParameters) {
     vTaskDelete(NULL); 
 
 }
+/**
 void task_load_endpoints(void *pvParameters) {
     esp_err_t err;
     if (xSemaphoreTake(xSemaphore, pdMS_TO_TICKS(ENDPOINTS_INPUT_TIMEOUT)) == pdTRUE) {
@@ -233,4 +253,30 @@ void task_load_endpoints(void *pvParameters) {
     }
 
     vTaskDelete(NULL); 
+}
+**/
+
+void func_load_endpoints() {
+    esp_err_t err;
+    if (xSemaphoreTake(xSemaphore, pdMS_TO_TICKS(ENDPOINTS_INPUT_TIMEOUT)) == pdTRUE) {
+        //semaphore taken in time. save read input to nvs. 
+        err = persist_endpoints();
+        if (err != ESP_OK){
+            ESP_LOGI(TAG, "Error Saving Endpoints: %d", err);
+        }
+    } 
+    else {
+        //semaphore not taken in time, discard task that reads user input and load endpoints from memory
+        vTaskDelete(task_get_endpoints_xhandle);
+        ESP_LOGI(TAG, "USER INPUT TIMEOUT OCCURED: Proceeding to Load Endpoints from NVS...");
+        err = load_endpoints();
+        if (err != ESP_OK){
+            ESP_LOGI(TAG, "Error Loading Endpoints: %d", err);
+            ESP_LOGI(TAG, "Restarting Device To Re-attempt Load...");
+            esp_restart();
+        }
+        ESP_LOGI(TAG, "mqtt endpoint: %s\n", mqtt_broker_endpoint);
+        ESP_LOGI(TAG, "ws endpoint: %s\n", ws_server_endpoint);
+    }
+
 }
