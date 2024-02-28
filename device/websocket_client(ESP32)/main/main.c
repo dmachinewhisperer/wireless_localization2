@@ -40,35 +40,38 @@ void app_main(void)
      */
     set_device_public_id();
 
-    /*logic to read-in tracked node(s) ids
-     *if(get_line())
+    /*ext1_id is the external node
+     * default value: none -> do not track any node
+     * any other value means sub to this node id and track
      */
+    ext1_id = "none"; 
+    
+    /*initialize output 
+     *i2c display used -> 0.91 OLED display with SSD1309 controller
+     */
+    init_display();
 
     /* attempt to get endpoints of broker and server from stdin and write to nvs using oneshot tasks
      * if the user does not input them after 1 min, TIMEOUT ocurrs
      * attempt to read previous ones stored in nvs
      * both tasks self -delete after completing
      */
-    xTaskCreate(task_get_endpoints, "get_uri1", configMINIMAL_STACK_SIZE + 1024, NULL, tskIDLE_PRIORITY+1, &task_get_endpoints_xhandle);
-    xTaskCreate(task_load_endpoints, "get_uri2", configMINIMAL_STACK_SIZE + 1024, NULL, tskIDLE_PRIORITY +1 , NULL);
-
+    xTaskCreate(task_get_endpoints, "get_uri1", configMINIMAL_STACK_SIZE + 1024, NULL, tskIDLE_PRIORITY+10, &task_get_endpoints_xhandle);
+    //xTaskCreate(task_load_endpoints, "get_uri2", configMINIMAL_STACK_SIZE + 1024, NULL, tskIDLE_PRIORITY +10 , NULL);
+    func_load_endpoints();
     //debug lines 
     //while(1);
 
-    /*initialize output 
-     *i2c display used -> 0.91 OLED display with SSD1309 controller
-     */
-    //init_display();
 
     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
      * Read "Establishing Wi-Fi or Ethernet Connection" section in
      * examples/protocols/README.md for more information about this function.
      */
-    //ESP_ERROR_CHECK(example_connect());
+    ESP_ERROR_CHECK(example_connect());
 
     /* Start the clients for the first time 
      * mqtt client must be started before ws client
      */
-    //start_mqtt_client(mqtt_broker_endpoint);
-    //start_websocket_client(ws_server_endpoint);
+    start_mqtt_client(mqtt_broker_endpoint);
+    start_websocket_client(ws_server_endpoint);
 }
