@@ -44,8 +44,8 @@ void app_main(void)
      * default value: none -> do not track any node
      * any other value means sub to this node id and track
      */
-    ext1_id = "none"; 
-    
+    //ext1_id = "none"; 
+
     /*initialize output 
      *i2c display used -> 0.91 OLED display with SSD1309 controller
      */
