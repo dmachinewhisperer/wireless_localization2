@@ -100,7 +100,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         if(strcmp(ext1_id, "none") == 0){
             ESP_LOGI(TAG, "No node to track. ext1_id is set to none");
             ssd1306_clear_line(&dev, 3, false);
-            ssd1306_display_text(&dev, 3, "no ext node", 12, false);
+            ssd1306_display_text(&dev, 3, "no tracking..", 13, false);
         }
         else{
             subscribe(ext1_id);
@@ -108,10 +108,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+        ssd1306_clear_line(&dev, 3, false);
+        ssd1306_display_text(&dev, 3, "broker disc", 12, false);
         break;
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+        ssd1306_clear_line(&dev, 3, false);
+        ssd1306_display_text(&dev, 3, "tracking..", 11, false);
 
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
@@ -163,7 +167,7 @@ void publish(char *topic, char *payload)
 
 void start_mqtt_client(char *endpoint)
 {
-    ssd1306_display_text(&dev, 2, "ext tr setup...", 15, true);
+    ssd1306_display_text(&dev, 3, "cli2 start..", 15, true);
     
     ESP_LOGI(TAG, "MQTT Broker Endpoint: %s\n", endpoint);
 
