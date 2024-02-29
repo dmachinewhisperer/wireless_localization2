@@ -53,9 +53,13 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
     switch (event_id) {
     case WEBSOCKET_EVENT_CONNECTED:
         ESP_LOGI(TAG, "WEBSOCKET_EVENT_CONNECTED");
+        ssd1306_clear_line(&dev, 2, false);
+        ssd1306_display_text(&dev, 2, "server conn", 12, false);
         break;
     case WEBSOCKET_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "WEBSOCKET_EVENT_DISCONNECTED");
+        ssd1306_clear_line(&dev, 2, false);
+        ssd1306_display_text(&dev, 2, "server disc", 12, false);
         /**
         esp_err_t status = ESP_FAIL;
         while(status != ESP_OK){
@@ -87,13 +91,16 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
         ssd1306_display_text(&dev, 2, (char *)data->data_ptr, 6, false);
         
         //publish this nodes location to broker, under its public id
-        publish((char *)self_id, (char *)data->data_ptr);
+        publish(self_id, (char *)data->data_ptr);
         }
 
         //NOTE: network control messages(PINGPONG) are not being handled
         break;
     case WEBSOCKET_EVENT_ERROR:
         ESP_LOGI(TAG, "WEBSOCKET_EVENT_ERROR");
+
+        ssd1306_clear_line(&dev, 2, false);
+        ssd1306_display_text(&dev, 2, "server error", 12, false);
         log_error_if_nonzero("HTTP status code",  data->error_handle.esp_ws_handshake_status_code);
         if (data->error_handle.error_type == WEBSOCKET_ERROR_TYPE_TCP_TRANSPORT) {
             log_error_if_nonzero("reported from esp-tls", data->error_handle.esp_tls_last_esp_err);
@@ -106,7 +113,7 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
 
 void start_websocket_client(char *endpoint)
 {
-    ssd1306_display_text(&dev, 3, "int startup...", 15, true);
+    ssd1306_display_text(&dev, 3, "cli1 start..", 15, true);
 
     ESP_LOGI(TAG, "Endpoint uri: %s\n", endpoint);
 
@@ -141,7 +148,7 @@ void start_websocket_client(char *endpoint)
             esp_websocket_client_send_text(ws_client, scan_results_buf, nbuf, portMAX_DELAY);
         
         } else{
-            ESP_LOGI(TAG, "Disconnected From Server");
+            ESP_LOGW(TAG, "Disconnected From Server");
         }
 
         //free scan_results_buf
