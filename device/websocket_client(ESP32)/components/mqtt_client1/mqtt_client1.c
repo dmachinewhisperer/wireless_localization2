@@ -53,6 +53,30 @@ static void get_string(char *line, size_t size)
 
 #endif /* CONFIG_BROKER_URL_FROM_STDIN */
 
+static void subscribe(char *topic)
+{
+    int msg_id;
+    msg_id = esp_mqtt_client_subscribe(client, topic, 0);
+    if(msg_id > 0){
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+    } else{
+        ESP_LOGE(TAG, "subscribe unsuccessful");
+    }
+}
+
+static void unsubscribe(char *topic)
+{
+    int msg_id;;
+    msg_id = esp_mqtt_client_unsubscribe(client, topic);
+
+    if(msg_id > 0){
+        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+    }else{
+        ESP_LOGE(TAG, "unsubscribe unsuccessful");
+    }
+    
+}
+
 /*
  * @brief Event handler registered to receive MQTT events
  *
@@ -135,30 +159,6 @@ void publish(char *topic, char *payload)
         ESP_LOGE(TAG, "publish unsuccessful");
     }
 
-}
-
-static void subscribe(char *topic)
-{
-    int msg_id;
-    msg_id = esp_mqtt_client_subscribe(client, topic, 0);
-    if(msg_id > 0){
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-    } else{
-        ESP_LOGE(TAG, "subscribe unsuccessful");
-    }
-}
-
-static void unsubscribe(char *topic)
-{
-    int msg_id;;
-    msg_id = esp_mqtt_client_unsubscribe(client, topic);
-
-    if(msg_id > 0){
-        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
-    }else{
-        ESP_LOGE(TAG, "unsubscribe unsuccessful");
-    }
-    
 }
 
 void start_mqtt_client(char *endpoint)
