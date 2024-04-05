@@ -72,6 +72,15 @@ void app_main(void)
     /* Start the clients for the first time 
      * mqtt client must be started before ws client
      */
+
+    /**Using a static server*/
+    //endpoints of the server instances running on a VM on Google Cloud
+     //char static_mqtt_broker_endpoint[] = "mqtt://35.200.215.40";
+     //char static_ws_server_endpoint[] = "ws://35.200.215.40";
+
+    //start_mqtt_client(static_mqtt_broker_endpoint);
+    //start_websocket_client(static_ws_server_endpoint);
+
     start_mqtt_client(mqtt_broker_endpoint);
     start_websocket_client(ws_server_endpoint);
 }
