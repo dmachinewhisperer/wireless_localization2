@@ -9,7 +9,7 @@
 
 #include "ssd1306.h"
 
-#define ENDPOINTS_INPUT_TIMEOUT 20 * 1000 //20s timeout
+#define ENDPOINTS_INPUT_TIMEOUT 30 * 1000 //30s timeout
 
 static const char *TAG =  "init";
 
@@ -26,8 +26,10 @@ char self_id[20];
 
 /*mac address of the external device nodes to track
  *they also publishe their location state under this topic (topic is mac addr)
+ * default value: none -> do not track any node
+ * any other value means sub to this node id and track
 */
-char ext1_id[20];
+char ext1_id[20] = "none";
 
 SemaphoreHandle_t xSemaphore;
 SSD1306_t dev;
@@ -212,7 +214,7 @@ void set_device_public_id(){
             (unsigned)mac[3], (unsigned)mac[4], (unsigned)mac[5]);
 
     //statically set mac addr of node to be tracked:assumed to be known beforehand
-    ext1_id = (char *)"1a2b3c4d5e";
+    //ext1_id = (char *)"1a2b3c4d5e";
 
     ESP_LOGI(TAG, "self_id: %s", self_id);
     ESP_LOGI(TAG, "ext1_id: %s", ext1_id);
