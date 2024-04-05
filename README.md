@@ -41,7 +41,7 @@ Each sub-project contains a detailed README on how to setup the project and its 
 - If porting to another microcontroller, the basic requirements are Wi-Fi capabilities and support for RTOS. To avoid stackoverflow exception during runtime, the reccommended stack size for the task running the websocket server and scanning for avaiable WAPs is about 8192K. 
 
 ## Read the Thesis
-Find the thesis [Here]([https://github.com](https://drive.google.com/file/d/1EtUbI897YP3uAeg-h0rvnsB-CtgYMB14/view?usp=sharing))
+Find the thesis [Here](https://drive.google.com/file/d/1EtUbI897YP3uAeg-h0rvnsB-CtgYMB14/view?usp=sharing)
 
 ## Read the Conference Paper
 Find the Conference paper(available upon publication) [Here](https://github.com)
