@@ -119,6 +119,7 @@ void start_websocket_client(char *endpoint)
     
     esp_websocket_client_config_t websocket_cfg = {};
     //PORT 80 needs elevated previledges
+    //using 8080 makes it easier to setup with admin priviledges
     //websocket_cfg.port = 8080;
 
     websocket_cfg.uri = endpoint;
