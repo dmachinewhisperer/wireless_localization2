@@ -115,9 +115,12 @@ void start_websocket_client(char *endpoint)
 {
     ssd1306_display_text(&dev, 3, "cli1 start..", 15, true);
 
-    ESP_LOGI(TAG, "Endpoint uri: %s\n", endpoint);
-
+     ESP_LOGI(TAG, "Endpoint uri: %s\n", endpoint);
+    
     esp_websocket_client_config_t websocket_cfg = {};
+    //PORT 80 needs elevated previledges
+    //websocket_cfg.port = 8080;
+
     websocket_cfg.uri = endpoint;
     websocket_cfg.reconnect_timeout_ms = 3 * 1000; //reconnect timeout 3s
     
