@@ -1,7 +1,8 @@
 # Wireless Indoor Localization
 
 ## Introduction
-This repository contains the implementation of the wireless indoor localization system I presented in my undergraduate thesis project. This is essentially an optimization of the work done in the phase 1 of the project ([Here](https://github.com)) to enable it run on resource contrained devices like microcontrollers.
+This repository contains the implementation of the wireless indoor localization system I presented in my undergraduate thesis project. This is  an optimization of the work done in the phase 1 of the project ([Here](https://github.com/wireless_localization)) to enable it run on resource contrained devices like microcontrollers.
+
 
 ### Boards and Devices
 End Device:
@@ -44,11 +45,19 @@ Find the thesis [Here]([https://github.com](https://drive.google.com/file/d/1EtU
 
 ## Read the Conference Paper
 Find the Conference paper(available upon publication) [Here](https://github.com)
+
 ## Contributing
 - Ngari Crisphine: crisphine96@gmail.com
 - Asogwa Emmanuel: asogwaemmanuel36@gmail.com 
 
+## Dependencies
+This project depends on following components developed independently:
+- Tool for building the digital map: [calibration](https://github.com/goddfatherr/calibration)
+- A server that hosts the model: [location_server](https://github.com/goddfatherr/location_server)
+- A remote logging tool for debugging the hardware remotely(optional): [remote_logger](https://github.com/goddfatherr/remote_logger)
+
 ## License
+MIT License
 
 ## Acknowledgments
 Project Supervisor: Dr. T Nargajuna: ntelgram@gitam.in
